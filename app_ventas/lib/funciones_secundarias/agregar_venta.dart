@@ -131,14 +131,14 @@ class _PantallaNuevaVentaState extends State<PantallaNuevaVenta> {
       final cantidadNueva = int.tryParse(_cantidadController.text) ?? 0;
       final idProdNuevo = int.parse(_idProductoSeleccionado!);
 
-      // LÓGICA DE EDICIÓN O CREACIÓN
+      
       if (widget.venta != null) {
-        // --- MODO EDICIÓN ---
+      
         final idVenta = widget.venta!['id_venta'];
         final idProdAnterior = widget.detalle!['id_producto'];
         final cantidadAnterior = widget.detalle!['cantidad'] ?? 0;
 
-        // 1. Revertir stock anterior si el producto es el mismo
+       
         if (idProdAnterior == idProdNuevo) {
           final prodData = await Supabase.instance.client
               .from('producto')
@@ -146,32 +146,30 @@ class _PantallaNuevaVentaState extends State<PantallaNuevaVenta> {
               .eq('id_producto', idProdNuevo)
               .single();
           final stockActualReal = (prodData['cantidad_producto'] as num).toInt();
-          
-          // El stock disponible para la edición es (actual + lo que ya habíamos quitado)
+         
           final stockDisponible = stockActualReal + cantidadAnterior;
 
           if (stockDisponible < cantidadNueva) {
             throw "Stock insuficiente. Máximo disponible: $stockDisponible";
           }
 
-          // 2. Actualizar registros
+       
           await Supabase.instance.client.from('venta').update({'total_venta': totalVenta}).eq('id_venta', idVenta);
           await Supabase.instance.client.from('detalle_venta').update({
             'cantidad': cantidadNueva,
             'precio_unitario': double.tryParse(_precioController.text.replaceAll(',', '.')) ?? 0,
           }).eq('id_venta', idVenta).eq('id_producto', idProdNuevo);
 
-          // 3. Ajustar stock final
+
           await Supabase.instance.client.from('producto').update({
             'cantidad_producto': stockDisponible - cantidadNueva
           }).eq('id_producto', idProdNuevo);
 
         } else {
-          // El producto cambió: Revertir stock del viejo y quitar del nuevo
-          // Revertir viejo
-          await _ajustarStock(idProdAnterior, cantidadAnterior); // Sumar
+       
+          await _ajustarStock(idProdAnterior, cantidadAnterior);
           
-          // Quitar del nuevo
+
           final prodNuevoData = await Supabase.instance.client
               .from('producto')
               .select('cantidad_producto')
@@ -180,7 +178,7 @@ class _PantallaNuevaVentaState extends State<PantallaNuevaVenta> {
           final stockNuevoActual = (prodNuevoData['cantidad_producto'] as num).toInt();
 
           if (stockNuevoActual < cantidadNueva) {
-             // Si no hay stock del nuevo, revertimos el ajuste del viejo antes de lanzar error
+
              await _ajustarStock(idProdAnterior, -cantidadAnterior); 
              throw "Stock insuficiente del nuevo producto.";
           }
@@ -197,7 +195,7 @@ class _PantallaNuevaVentaState extends State<PantallaNuevaVenta> {
           }).eq('id_producto', idProdNuevo);
         }
       } else {
-        // --- MODO CREACIÓN (Existing logic) ---
+       
         final prodData = await Supabase.instance.client.from('producto').select('cantidad_producto').eq('id_producto', idProdNuevo).single();
         final stockDisponible = (prodData['cantidad_producto'] as num).toInt();
 
