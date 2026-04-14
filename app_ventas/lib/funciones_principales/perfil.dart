@@ -138,7 +138,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                         ),
                         Column(
                           mainAxisSize: MainAxisSize
-                              .min, // Importante para que no ocupe toda la pantalla
+                              .min, 
                           children: [
                             const Center(
                               child: CircleAvatar(
@@ -226,7 +226,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
 
                         const SizedBox(height: 30),
 
-                        // Botones de Acción
+      
                         SizedBox(
                           width: double.infinity,
                           height: 55,
